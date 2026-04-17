@@ -40,7 +40,7 @@ def _render_body(text):
   for tag in soup.find_all("a", href=True):
     href = tag["href"]
     if href.startswith("http://") or href.startswith("https://"):
-      tag["rel"] = "nofollow noopener"
+      tag["rel"] = ["nofollow", "noopener"]
       if not tag.get("target"):
         tag["target"] = "_blank"
   return str(soup)
@@ -307,14 +307,7 @@ def create_app():
     xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
     xml += f'<url><loc>{url_for("index", _external=True, _scheme="https")}</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n'
     for article in articles:
-      date_str = article.get("date", "")
-      lastmod = ""
-      if date_str:
-        try:
-          parsed_date = datetime.strptime(date_str, "%B %d, %Y")
-          lastmod = parsed_date.strftime("%Y-%m-%d")
-        except ValueError:
-          lastmod = ""
+      lastmod = article.get("date_iso", "")
       xml += f'<url><loc>{url_for("article", slug=article["slug"], _external=True, _scheme="https")}</loc>'
       if lastmod:
         xml += f"<lastmod>{lastmod}</lastmod>"
@@ -322,7 +315,7 @@ def create_app():
       og_image = article.get("og_image", "")
       if og_image:
         image_url = og_image if og_image.startswith("http") else f"{base_url}{og_image}"
-        xml += f"<image:image><image:loc>{image_url}</image:loc><image:title>{xml_escape(article.get('title', ''))}</image:title></image:image>"
+        xml += f"<image:image><image:loc>{xml_escape(image_url)}</image:loc><image:title>{xml_escape(article.get('title', ''))}</image:title></image:image>"
       xml += "</url>\n"
     categories = set()
     for article in articles:

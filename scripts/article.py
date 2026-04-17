@@ -179,7 +179,13 @@ def save_article(front_matter, file_path, content):
 import traceback
 
 def notify_indexnow(domain, slug):
-  """Ping IndexNow so Bing and Yandex discover new articles immediately."""
+  """Ping IndexNow so Bing and Yandex discover new articles immediately.
+
+  Prerequisites:
+    1. Set the INDEXNOW_API_KEY environment variable.
+    2. Host a file at https://<domain>/<INDEXNOW_API_KEY>.txt containing the key.
+       IndexNow validates ownership via that file before accepting submissions.
+  """
   if not INDEXNOW_API_KEY:
     print(f"INDEXNOW_API_KEY not set. Skipping IndexNow notification for {slug}.")
     return

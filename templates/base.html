@@ -64,7 +64,7 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "{{ config.site.name }}",
-      "url": "{{ url_for('index', _external=True) }}"
+      "url": "{{ url_for('index', _external=True, _scheme='https') }}"
     }
   </script>
   {% block breadcrumb_jsonld %}{% endblock %}
