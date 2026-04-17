@@ -1,0 +1,74 @@
+{% extends 'themes/lifestyle/base.html' %}
+{% block title %}{% if category_name %}{{ category_name }} - {{ config.site.name }}{% else %}{{ config.site.name }}{% endif %}{% endblock %}
+{% block meta_description %}{% if category_name %}Browse {{ category_name }} articles on {{ config.site.name }}.{% else %}{{ config.site.description }}{% endif %}{% endblock %}
+{% block meta_keywords %}{{ config.site.keywords|join(', ') }}{% endblock %}
+{% block og_title %}{% if category_name %}{{ category_name }} - {{ config.site.name }}{% else %}{{ config.site.name }}{% endif %}{% endblock %}
+{% block og_description %}{% if category_name %}Browse {{ category_name }} articles.{% else %}{{ config.site.description }}{% endif %}{% endblock %}
+{% block og_image %}{{ config.seo.og_image }}{% endblock %}
+{% block twitter_title %}{% if category_name %}{{ category_name }} - {{ config.site.name }}{% else %}{{ config.site.name }}{% endif %}{% endblock %}
+{% block twitter_description %}{% if category_name %}Browse {{ category_name }} articles.{% else %}{{ config.site.description }}{% endif %}{% endblock %}
+{% block twitter_image %}{{ config.seo.twitter_image }}{% endblock %}
+{% block canonical_url %}{% if category_slug %}{{ url_for('category', category=category_slug, _external=True, _scheme='https') }}{% else %}{{ url_for('index', _external=True, _scheme='https') }}{% endif %}{% endblock %}
+{% block breadcrumb_jsonld %}{% if category_name %}
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"{{ url_for('index', _external=True, _scheme='https') }}"},{"@type":"ListItem","position":2,"name":"{{ category_name }}","item":"{{ url_for('category', category=category_slug, _external=True, _scheme='https') }}"}]}</script>
+{% endif %}{% endblock %}
+{% block breadcrumbs %}
+<nav class="breadcrumbs"><a href="{{ url_for('index') }}">Home</a>{% if category_name %} &rsaquo; <span>{{ category_name }}</span>{% endif %}</nav>
+{% endblock %}
+{% block page_class %}index-page{% endblock %}
+{% block content %}
+<section class="search-section">
+  <form class="search-bar" action="{{ url_for('search') }}" method="GET">
+    <input type="text" name="q" placeholder="Search articles..." value="{{ search_query|default('') }}">
+    <button type="submit" aria-label="Search">Search</button>
+  </form>
+</section>
+<div class="columns-section">
+  <div class="two-thirds-column">
+    {% if latest_article %}
+    <section class="featured-post">
+      <h2>Featured</h2>
+      <img src="{{ latest_article.og_image or config.content.default_image }}" alt="{{ latest_article.title }}" loading="lazy">
+      <h3><a href="{{ url_for('article', slug=latest_article.slug) }}">{{ latest_article.title }}</a></h3>
+      <p>{{ latest_article.meta_description }}</p>
+      <a href="{{ url_for('article', slug=latest_article.slug) }}" class="button">Read More</a>
+    </section>
+    {% endif %}
+    {% if latest_articles %}
+    <section class="recent-articles">
+      <h2>{% if search_query %}Results for "{{ search_query }}"{% elif category_name %}{{ category_name }}{% else %}Recent Articles{% endif %}</h2>
+      <div class="article-list">
+        {% for article in latest_articles %}
+        <div class="article-preview article-preview-home">
+          <img src="{{ article.og_image or config.content.default_image }}" alt="{{ article.title }}" loading="lazy">
+          <h3><a href="{{ url_for('article', slug=article.slug) }}">{{ article.title }}</a></h3>
+          <p>{{ article.meta_description }}</p>
+          <a href="{{ url_for('article', slug=article.slug) }}" class="button">Read More</a>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+    {% if related_articles %}
+    <section class="related-articles">
+      <h2>More Articles</h2>
+      <div class="article-list">
+        {% for article in related_articles[:6] %}
+        <div class="article-preview">
+          <img src="{{ article.og_image|default(config.content.default_image) }}" alt="{{ article.title }}" loading="lazy">
+          <h3><a href="{{ url_for('article', slug=article.slug) }}">{{ article.title }}</a></h3>
+          <p>{{ article.meta_description }}</p>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </div>
+  <div class="one-third-column">
+    <section class="categories">
+      <h2>Categories</h2>
+      <ul>{% for topic in config.content.topics %}<li><a href="{{ url_for('category', category=topic|slugify) }}">{{ topic|capitalize }}</a></li>{% endfor %}</ul>
+    </section>
+  </div>
+</div>
+{% endblock %}

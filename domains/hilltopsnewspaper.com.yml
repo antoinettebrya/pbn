@@ -1,4 +1,5 @@
 site:
+  theme: news
   name: Hilltops Newspaper
   description: Chronicling the pulse of the world with a focus on sports, culture, and community-driven innovation.
   keywords: [ sports, culture, community, gaming]

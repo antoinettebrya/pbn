@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 
+import requests
 import yaml
 from slugify import slugify  # From python-slugify, don’t screw this up
 from xai_sdk import Client
@@ -10,6 +11,9 @@ from xai_sdk.chat import system, user
 XAI_API_KEY = os.getenv("XAI_API_KEY")  # Yo, set this or we’re hosed
 if not XAI_API_KEY:
   raise ValueError("XAI_API_KEY not set. Go beg xAI for one, you cheapskate.")
+
+# IndexNow key for fast Bing/Yandex crawl notification (optional)
+INDEXNOW_API_KEY = os.getenv("INDEXNOW_API_KEY")
 
 
 def load_domain_config(domain):
@@ -174,6 +178,32 @@ def save_article(front_matter, file_path, content):
 
 import traceback
 
+def notify_indexnow(domain, slug):
+  """Ping IndexNow so Bing and Yandex discover new articles immediately.
+
+  Prerequisites:
+    1. Set the INDEXNOW_API_KEY environment variable.
+    2. Host a file at https://<domain>/<INDEXNOW_API_KEY>.txt containing the key.
+       IndexNow validates ownership via that file before accepting submissions.
+  """
+  if not INDEXNOW_API_KEY:
+    print(f"INDEXNOW_API_KEY not set. Skipping IndexNow notification for {slug}.")
+    return
+  url = f"https://{domain}/article/{slug}"
+  payload = {
+    "host": domain,
+    "key": INDEXNOW_API_KEY,
+    "keyLocation": f"https://{domain}/{INDEXNOW_API_KEY}.txt",
+    "urlList": [url],
+  }
+  try:
+    resp = requests.post("https://api.indexnow.org/indexnow", json=payload, timeout=10)
+    print(f"IndexNow notified for {url}: HTTP {resp.status_code}")
+  except Exception as e:
+    print(f"IndexNow notification failed for {url}: {e}")
+
+
+
 
 def main():
   """Generate and save articles for our PBN. Don’t waste my API credits, you hear?"""
@@ -199,6 +229,7 @@ def main():
         content = generate_article(domain, article["topic"], article["keywords"], article["description"], article["author"], config)
         if content:
           save_article(article["front_matter"], article["file_path"], content)
+          notify_indexnow(domain, article["front_matter"]["slug"])
         else:
           print(f"Skipping {article['front_matter']['title']}. Grok’s probably off sipping digital lattes.")
     except FileNotFoundError as e:

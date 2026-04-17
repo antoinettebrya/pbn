@@ -1,0 +1,76 @@
+{% extends 'themes/creative/base.html' %}
+{% block title %}{{ article.title }}{% endblock %}
+{% block meta_description %}{{ article.meta_description|default(config.site.description) }}{% endblock %}
+{% block meta_keywords %}{{ article.meta_keywords|default(config.site.keywords)|join(', ') }}{% endblock %}
+{% block og_type %}article{% endblock %}
+{% block og_title %}{{ article.og_title|default(article.title) }}{% endblock %}
+{% block og_description %}{{ article.og_description|default(article.meta_description|default(config.site.description)) }}{% endblock %}
+{% block og_image %}{{ article.og_image|default(config.seo.og_image) }}{% endblock %}
+{% block twitter_title %}{{ article.og_title|default(article.title) }}{% endblock %}
+{% block twitter_description %}{{ article.og_description|default(article.meta_description|default(config.site.description)) }}{% endblock %}
+{% block twitter_image %}{{ article.og_image|default(config.seo.twitter_image) }}{% endblock %}
+{% block canonical_url %}{% if article.original_url %}{{ article.original_url }}{% else %}{{ url_for('article', slug=article.slug, _external=True, _scheme='https') }}{% endif %}{% endblock %}
+{% block head_extra %}
+<meta property="article:published_time" content="{{ article.date_iso }}">
+<meta property="article:author" content="{{ article.author }}">
+{% for kw in article.meta_keywords|default([]) %}<meta property="article:tag" content="{{ kw }}">
+{% endfor %}{% endblock %}
+{% block breadcrumb_jsonld %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"{{ url_for('index', _external=True, _scheme='https') }}"},{"@type":"ListItem","position":2,"name":{{ article.title | tojson }},"item":"{{ url_for('article', slug=article.slug, _external=True, _scheme='https') }}"}]}
+</script>
+{% endblock %}
+{% block breadcrumbs %}
+<nav class="breadcrumbs"><a href="{{ url_for('index') }}">Home</a> &rsaquo; <span>{{ article.title }}</span></nav>
+{% endblock %}
+{% block page_class %}article-page{% endblock %}
+{% block content %}
+<section class="hero">
+  <img src="{{ article.og_image|default(config.content.default_image) }}" alt="{{ article.title }}" loading="eager">
+</section>
+<section class="search-section">
+  <form class="search-bar" action="{{ url_for('search') }}" method="GET">
+    <input type="text" name="q" placeholder="Search articles...">
+    <button type="submit" aria-label="Search">Search</button>
+  </form>
+</section>
+<div class="article-container">
+  <article class="article">
+    <div class="article-content">
+      <h1>{{ article.title }}</h1>
+      <p class="byline">By {{ article.author }} &middot; {{ article.date }} &middot; {{ article.reading_time }} min read</p>
+      {{ article.body_html | safe }}
+    </div>
+    <p>Got a story? Email <a href="mailto:{{ config.site.email }}">{{ config.site.email }}</a></p>
+  </article>
+  <aside class="sidebar">
+    {% if article.meta_keywords %}
+    <section class="related-categories">
+      <h2>Topics</h2>
+      <ul class="category-list">
+        {% for category in article.meta_keywords|default([]) %}<li><a href="{{ url_for('category', category=category|slugify) }}">{{ category }}</a></li>{% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+    {% if related_articles %}
+    <section class="related-articles">
+      <h2>Related Articles</h2>
+      <div class="article-list">
+        {% for related in related_articles[:5] %}
+        <div class="article-preview">
+          <a href="{{ url_for('article', slug=related.slug) }}">
+            <img src="{{ related.og_image|default(config.content.default_image) }}" alt="{{ related.title }}" loading="lazy">
+            <h3>{{ related.title }}</h3>
+            <p>{{ related.meta_description }}</p>
+          </a>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </aside>
+</div>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Article","headline":"{{ article.title }}","description":"{{ article.meta_description|default(config.site.description) }}","author":{"@type":"Person","name":"{{ article.author }}"},"publisher":{"@type":"Organization","name":"{{ config.site.name }}"},"datePublished":"{{ article.date_iso }}","dateModified":"{{ article.date_iso }}","image":"{{ article.og_image|default(config.content.default_image) }}","mainEntityOfPage":{"@type":"WebPage","@id":"{{ url_for('article', slug=article.slug, _external=True, _scheme='https') }}"},"keywords":"{{ article.meta_keywords|default(config.site.keywords)|join(', ') }}"}
+</script>
+{% endblock %}

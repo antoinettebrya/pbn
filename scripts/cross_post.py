@@ -82,7 +82,7 @@ def copy_and_update_article(source_file, original_site, target_site):
     new_date = CURRENT_DATE
 
   # Editorial header with backlink to the actual article URL
-  original_url = f"{original_site['domain']}/post/{slug}"
+  original_url = f"{original_site['domain']}/article/{slug}"
   cross_post_header = (
     f"_This article originally appeared in [{original_site['name']}]({original_url}) " f"on {original_date}. It is republished here with permission._\n\n"
   )

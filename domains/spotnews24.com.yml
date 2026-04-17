@@ -1,4 +1,5 @@
 site:
+  theme: magazine
   name: Spot News 24
   description: Hard-hitting news on Canada-US trade, BC politics, World Politics, and energy infrastructure, with a sharp eye on cultural shifts.
   keywords: [Canada-US trade, BC politics, energy infrastructure, Pacific Northwest, culture]

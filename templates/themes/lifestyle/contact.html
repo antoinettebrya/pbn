@@ -1,0 +1,28 @@
+{% extends 'themes/lifestyle/base.html' %}
+{% block title %}Contact Us - {{ config.site.name }}{% endblock %}
+{% block meta_description %}Contact {{ config.site.name }} to share story ideas.{% endblock %}
+{% block meta_keywords %}{{ config.site.keywords|join(', ') }}{% endblock %}
+{% block og_title %}Contact {{ config.site.name }}{% endblock %}
+{% block og_description %}Get in touch with {{ config.site.name }}.{% endblock %}
+{% block og_image %}{{ config.seo.og_image }}{% endblock %}
+{% block twitter_title %}Contact {{ config.site.name }}{% endblock %}
+{% block twitter_description %}Get in touch with {{ config.site.name }}.{% endblock %}
+{% block twitter_image %}{{ config.seo.twitter_image }}{% endblock %}
+{% block canonical_url %}{{ url_for('contact', _external=True, _scheme='https') }}{% endblock %}
+{% block breadcrumbs %}<nav class="breadcrumbs"><a href="{{ url_for('index') }}">Home</a> &rsaquo; <span>Contact Us</span></nav>{% endblock %}
+{% block page_class %}contact-page{% endblock %}
+{% block content %}
+<div class="content-container">
+  <h1>Contact Us</h1>
+  <p>Have questions or want to share a story idea? We'd love to hear from you.</p>
+</div>
+<div class="form-container">
+  <form method="POST" action="{{ url_for('contact') }}">
+    <label for="name">Name: <input type="text" id="name" name="name" required></label>
+    <label for="email">Email: <input type="email" id="email" name="email" required></label>
+    <label for="message">Message: <textarea id="message" name="message" required></textarea></label>
+    <button type="submit" class="button">Send Message</button>
+  </form>
+</div>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"ContactPage","name":"Contact {{ config.site.name }}","url":"{{ url_for('contact', _external=True) }}"}</script>
+{% endblock %}
