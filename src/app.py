@@ -1,16 +1,49 @@
 import os
+import time
 from datetime import datetime
 from xml.sax.saxutils import escape as xml_escape
 
 import frontmatter
 import markdown
 import yaml
+from bs4 import BeautifulSoup
 from flask import Flask, Response, redirect, render_template, request, send_from_directory, url_for
 from slugify import slugify
 
 from src.text_analytics import compute_tfidf, cosine_similarity_manual, tokenize
 
 DEV = os.getenv("DEV", False) == "True"
+
+# Per-process article cache: {domain: (timestamp, articles_list)}
+_articles_cache: dict = {}
+_ARTICLES_CACHE_TTL = 300  # seconds
+
+
+def _normalize_date(date_val):
+  """Return (ISO string, display string) from a raw YAML date value (str or date object)."""
+  if not date_val:
+    return "", ""
+  if hasattr(date_val, "strftime"):
+    dt = datetime(date_val.year, date_val.month, date_val.day) if not isinstance(date_val, datetime) else date_val
+  else:
+    try:
+      dt = datetime.strptime(str(date_val), "%Y-%m-%d")
+    except ValueError:
+      return str(date_val), str(date_val)
+  return dt.strftime("%Y-%m-%d"), dt.strftime("%B %d, %Y")
+
+
+def _render_body(text):
+  """Render Markdown to HTML and add rel='nofollow noopener' + target='_blank' to external links."""
+  html = markdown.markdown(text, extensions=["extra", "codehilite", "toc"])
+  soup = BeautifulSoup(html, "html.parser")
+  for tag in soup.find_all("a", href=True):
+    href = tag["href"]
+    if href.startswith("http://") or href.startswith("https://"):
+      tag["rel"] = "nofollow noopener"
+      if not tag.get("target"):
+        tag["target"] = "_blank"
+  return str(soup)
 
 
 # Add this near the top of your file, with other imports
@@ -93,7 +126,12 @@ def load_domain_config():
 
 
 def load_articles(domain):
-  """Load articles from content/[domain]/articles. No articles? Good luck with that empty blog."""
+  """Load articles from content/[domain]/articles with a short TTL in-process cache."""
+  now = time.time()
+  cached = _articles_cache.get(domain)
+  if cached and (now - cached[0]) < _ARTICLES_CACHE_TTL:
+    return cached[1]
+
   articles_path = f"content/{domain}/articles"
   articles = []
   if not os.path.exists(articles_path):
@@ -104,6 +142,9 @@ def load_articles(domain):
       try:
         with open(os.path.join(articles_path, filename), "r") as f:
           post = frontmatter.load(f)
+          raw_date = post.get("date", "")
+          date_iso, date_display = _normalize_date(raw_date)
+          words = len(post.content.split())
           articles.append(
             {
               "title": post.get("title", "Untitled"),
@@ -114,21 +155,25 @@ def load_articles(domain):
               "og_description": post.get("og_description", ""),
               "og_image": post.get("og_image", ""),
               "author": post.get("author", "Anonymous"),
-              "date": post.get("date", ""),
+              "date": date_iso,          # raw ISO kept for sorting
+              "date_iso": date_iso,      # ISO format for JSON-LD / OG tags
+              "date_display": date_display,
               "body": post.content,
+              "body_html": _render_body(post.content),
               "topic": post.get("topic", ""),
+              "original_url": post.get("original_url", ""),
+              "reading_time": max(1, round(words / 200)),
             }
           )
       except Exception as e:
         print(f"Error loading article {filename}: {str(e)}. Skipping.")
 
   sorted_list = sorted(articles, key=lambda x: x["date"] or "1970-01-01", reverse=True)
-  # format date nice
   for article in sorted_list:
-    # "%B %d, %Y"
-    article["date"] = datetime.strptime(article["date"], "%Y-%m-%d").strftime("%B %d, %Y") if article["date"] else article["date"]
+    article["date"] = article.pop("date_display")
 
-  return articles
+  _articles_cache[domain] = (now, sorted_list)
+  return sorted_list
 
 
 def get_related_articles(articles, current_article):
@@ -148,6 +193,7 @@ def get_related_articles(articles, current_article):
 
 def create_app():
   app = Flask(__name__, template_folder="../templates", static_folder="../static")
+  app.config["SEND_FILE_MAX_AGE_DEFAULT"] = 31536000  # 1-year cache for static assets
 
   @app.context_processor
   def inject_config():
@@ -190,6 +236,7 @@ def create_app():
       latest_articles=matching_articles[:10],  # Limit to 10 articles
       related_articles=articles[:10],
       category_name=category.replace("-", " ").title(),
+      category_slug=category,
     )
 
   @app.route("/search")
@@ -322,7 +369,7 @@ def create_app():
 
   @app.template_filter("markdown")
   def markdown_filter(text):
-    return markdown.markdown(text, extensions=["extra", "codehilite", "toc"])
+    return _render_body(text)
 
   @app.template_filter("slugify")
   def slugify_filter(text):

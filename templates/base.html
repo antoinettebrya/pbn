@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ config.site.lang|default('en') }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,15 +9,19 @@
   <meta name="keywords" content="{% block meta_keywords %}{{ config.site.keywords|join(', ') }}{% endblock %}">
   <meta name="robots" content="index, follow">
   <meta name="author" content="{{ config.site.name }}">
+  <meta name="theme-color" content="{{ config.seo.theme_color|default('#ffffff') }}">
+  {% if config.seo.bing_webmaster_id %}
+  <meta name="msvalidate.01" content="{{ config.seo.bing_webmaster_id }}">
+  {% endif %}
 
   <link rel="apple-touch-icon" sizes="180x180" href="/content/assets/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="32x32" href="{{ config.site.favicon|default('/content/assets/favicon-32x32.png') }}">
   <link rel="icon" type="image/png" sizes="16x16" href="/content/assets/favicon-16x16.png">
   <link rel="manifest" href="/static/site.webmanifest">
   <link rel="canonical" href="{% block canonical_url %}{{ request.url_root.rstrip('/') + request.path }}{% endblock %}">
-  
+
   <meta property="og:site_name" content="{{ config.site.name }}">
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
   <meta property="og:title" content="{% block og_title %}{% endblock %}">
   <meta property="og:description" content="{% block og_description %}{% endblock %}">
   {% set og_image %}{% block og_image %}{{ config.seo.og_image }}{% endblock %}{% endset %}
@@ -29,12 +33,32 @@
   <meta name="twitter:description" content="{% block twitter_description %}{{ og_description|default('') }}{% endblock %}">
   <meta name="twitter:image" content="{% if twitter_image.startswith('http://') or twitter_image.startswith('https://') %}{{ twitter_image }}{% else %}{{ request.url_root.rstrip('/') + twitter_image if twitter_image else request.url_root.rstrip('/') + config.seo.twitter_image }}{% endif %}">
 
+  {% block head_extra %}{% endblock %}
+
   <link rel="sitemap" type="application/xml" href="{{ url_for('sitemap') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
+  <script src="{{ url_for('static', filename='script.js') }}" defer></script>
 
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "{{ config.site.name }}",
+      "url": "{{ url_for('index', _external=True) }}",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "{{ url_for('search', _external=True, _scheme='https') }}?q={search_term}"
+        },
+        "query-input": "required name=search_term"
+      }
+    }
+  </script>
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -43,6 +67,7 @@
       "url": "{{ url_for('index', _external=True) }}"
     }
   </script>
+  {% block breadcrumb_jsonld %}{% endblock %}
   {% if config.analytics.google_analytics_id %}
   <script async src="https://www.googletagmanager.com/gtag/js?id={{ config.analytics.google_analytics_id }}"></script>
   <script>
@@ -108,7 +133,7 @@
     </div>
     <div class="stack">
       <p>{{ config.footer.copyright }}</p>
-      <p>Powered by <a href="https://grok.com">Grok</a></p>
+      <p>Powered by <a href="https://grok.com" rel="nofollow noopener" target="_blank">Grok</a></p>
     </div>
   </footer>
 </body>
