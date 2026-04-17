@@ -1,4 +1,3 @@
-import datetime
 import os
 from datetime import datetime
 from xml.sax.saxutils import escape as xml_escape
