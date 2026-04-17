@@ -1,6 +1,7 @@
 import datetime
 import os
 from datetime import datetime
+from xml.sax.saxutils import escape as xml_escape
 
 import frontmatter
 import markdown
@@ -210,7 +211,7 @@ def create_app():
         if score > 0.1:
           results.append(article)
     results.sort(key=lambda x: x["date"] or "1970-01-01", reverse=True)
-    return render_template("index.html", latest_article=None, latest_articles=results, related_articles=articles[103], search_query=query)
+    return render_template("index.html", latest_article=None, latest_articles=results, related_articles=articles[:3], search_query=query)
 
   @app.route("/contact", methods=["GET", "POST"])
   def contact():
@@ -250,33 +251,48 @@ def create_app():
     """Privacy policy."""
     return render_template("privacy.html")
 
-  from datetime import datetime
-
   @app.route("/sitemap.xml")
   def sitemap():
     """Sitemap for SEO."""
     domain = prefered_domain(request)
     articles = load_articles(domain)
+    base_url = url_for("index", _external=True, _scheme="https").rstrip("/")
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n'
-    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
+    xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">\n'
     xml += f'<url><loc>{url_for("index", _external=True, _scheme="https")}</loc><changefreq>daily</changefreq><priority>1.0</priority></url>\n'
     for article in articles:
       date_str = article.get("date", "")
       lastmod = ""
       if date_str:
         try:
-          # Parse date string in "January 4, 2025" format
           parsed_date = datetime.strptime(date_str, "%B %d, %Y")
           lastmod = parsed_date.strftime("%Y-%m-%d")
         except ValueError:
-          # Skip invalid dates
           lastmod = ""
       xml += f'<url><loc>{url_for("article", slug=article["slug"], _external=True, _scheme="https")}</loc>'
       if lastmod:
         xml += f"<lastmod>{lastmod}</lastmod>"
-      xml += "<changefreq>daily</changefreq><priority>1.0</priority></url>\n"
+      xml += "<changefreq>weekly</changefreq><priority>0.8</priority>"
+      og_image = article.get("og_image", "")
+      if og_image:
+        image_url = og_image if og_image.startswith("http") else f"{base_url}{og_image}"
+        xml += f"<image:image><image:loc>{image_url}</image:loc><image:title>{xml_escape(article.get('title', ''))}</image:title></image:image>"
+      xml += "</url>\n"
+    categories = set()
+    for article in articles:
+      for kw in article.get("meta_keywords", []):
+        categories.add(slugify(kw))
+    for cat in sorted(categories):
+      xml += f'<url><loc>{url_for("category", category=cat, _external=True, _scheme="https")}</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>\n'
     xml += "</urlset>"
     return Response(xml, mimetype="application/xml")
+
+  @app.route("/robots.txt")
+  def robots_txt():
+    """Robots.txt for SEO crawl control."""
+    sitemap_url = url_for("sitemap", _external=True, _scheme="https")
+    content = f"User-agent: *\nAllow: /\nSitemap: {sitemap_url}\n"
+    return Response(content, mimetype="text/plain")
 
   @app.route("/content/assets/<path:filename>")
   def serve_content_images(filename):

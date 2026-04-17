@@ -24,9 +24,6 @@
   <picture>
     <img src="{{ article.og_image|default(config.content.default_image) }}" alt="{{ article.title }}" loading="lazy" width="1200" height="600">
   </picture>
-  <div class="hero-content">
-    <h1>{{ article.title }}</h1>
-  </div>
 </section>
 
 <section class="search-section">
@@ -98,6 +95,7 @@
     "url": "{{ url_for('index', _external=True) }}"
   },
   "datePublished": "{{ article.date }}",
+  "dateModified": "{{ article.date }}",
   "image": "{{ article.og_image|default(config.content.default_image) }}",
   "mainEntityOfPage": {
     "@type": "WebPage",

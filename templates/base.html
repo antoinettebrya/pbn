@@ -20,13 +20,14 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="{% block og_title %}{% endblock %}">
   <meta property="og:description" content="{% block og_description %}{% endblock %}">
-  {% set og_image = '' %}
+  {% set og_image %}{% block og_image %}{{ config.seo.og_image }}{% endblock %}{% endset %}
+  {% set twitter_image %}{% block twitter_image %}{{ config.seo.twitter_image }}{% endblock %}{% endset %}
   <meta property="og:image" content="{% if og_image.startswith('http://') or og_image.startswith('https://') %}{{ og_image }}{% else %}{{ request.url_root.rstrip('/') + og_image if og_image else request.url_root.rstrip('/') + config.seo.og_image }}{% endif %}">
   <meta property="og:url" content="{{ request.url }}">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="{% block twitter_title %}{{ og_title|default('') }}{% endblock %}">
   <meta name="twitter:description" content="{% block twitter_description %}{{ og_description|default('') }}{% endblock %}">
-  <meta name="twitter:image" content="{% if og_image.startswith('http://') or og_image.startswith('https://') %}{{ og_image }}{% else %}{{ request.url_root.rstrip('/') + og_image if og_image else request.url_root.rstrip('/') + config.seo.twitter_image }}{% endif %}">
+  <meta name="twitter:image" content="{% if twitter_image.startswith('http://') or twitter_image.startswith('https://') %}{{ twitter_image }}{% else %}{{ request.url_root.rstrip('/') + twitter_image if twitter_image else request.url_root.rstrip('/') + config.seo.twitter_image }}{% endif %}">
 
   <link rel="sitemap" type="application/xml" href="{{ url_for('sitemap') }}">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:wght@400;500;700&display=swap">
@@ -39,7 +40,7 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "{{ config.site.name }}",
-      "url": "{{ url_for('index', _external=True) }}",
+      "url": "{{ url_for('index', _external=True) }}"
     }
   </script>
   {% if config.analytics.google_analytics_id %}
