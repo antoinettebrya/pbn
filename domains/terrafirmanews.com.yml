@@ -1,4 +1,5 @@
 site:
+  theme: local
   name: Terra Firma News
   description: Your source for Hollywood’s latest movies, TV shows, and celebrity buzz, grounded in entertainment excellence.
   keywords: [Hollywood, movies, TV shows, celebrities, entertainment]

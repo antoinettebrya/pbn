@@ -1,0 +1,27 @@
+{% extends 'themes/minimal/base.html' %}
+{% block title %}Write for {{ config.site.name }}{% endblock %}
+{% block meta_description %}Share your expertise on {{ config.content.topics|join(', ') }} with {{ config.site.name }}.{% endblock %}
+{% block meta_keywords %}{{ config.site.keywords|join(', ') }}{% endblock %}
+{% block og_title %}Contribute to {{ config.site.name }}{% endblock %}
+{% block og_description %}Join our blog to showcase your insights on {{ config.content.topics|join(', ') }}.{% endblock %}
+{% block og_image %}{{ config.seo.og_image }}{% endblock %}
+{% block twitter_title %}Contribute to {{ config.site.name }}{% endblock %}
+{% block twitter_description %}Join our blog to showcase your insights on {{ config.content.topics|join(', ') }}.{% endblock %}
+{% block twitter_image %}{{ config.seo.twitter_image }}{% endblock %}
+{% block canonical_url %}{{ url_for('guest_poster', _external=True, _scheme='https') }}{% endblock %}
+{% block breadcrumbs %}<nav class="breadcrumbs"><a href="{{ url_for('index') }}">Home</a> &rsaquo; <span>Write for Us</span></nav>{% endblock %}
+{% block page_class %}guest-poster-page{% endblock %}
+{% block content %}
+<div class="content-container">
+  <h1>Share Your Expertise</h1>
+  <p>Contribute to our blog and connect with our audience interested in {{ config.content.topics|join(', ') }}.</p>
+  <h2>Why Contribute?</h2>
+  <ul>
+    <li><strong>Reach Our Audience:</strong> Engage readers interested in {{ config.content.topics|join(', ') }}.</li>
+    <li><strong>Build Your Brand:</strong> Get credited with your name, bio, and website link.</li>
+  </ul>
+  <h2>How to Submit</h2>
+  <p>Send your article (500–1000 words) to <a href="mailto:{{ config.site.email }}?subject=Guest Article Submission">{{ config.site.email }}</a> with a brief pitch, your article, and a short bio.</p>
+  <p><a href="mailto:{{ config.site.email }}?subject=Guest Article Submission" class="button">Submit Your Article</a></p>
+</div>
+{% endblock %}

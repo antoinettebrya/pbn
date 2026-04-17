@@ -1,0 +1,45 @@
+{% extends 'themes/business/base.html' %}
+{% block title %}Explore Articles - {{ config.site.name }}{% endblock %}
+{% block meta_description %}Explore our latest articles at {{ config.site.name }}.{% endblock %}
+{% block meta_keywords %}{{ config.site.keywords|join(', ') }}{% endblock %}
+{% block og_title %}Explore Articles - {{ config.site.name }}{% endblock %}
+{% block og_description %}Explore our latest articles at {{ config.site.name }}.{% endblock %}
+{% block og_image %}{{ config.seo.og_image }}{% endblock %}
+{% block twitter_title %}Explore Articles - {{ config.site.name }}{% endblock %}
+{% block twitter_description %}Explore our latest articles at {{ config.site.name }}.{% endblock %}
+{% block twitter_image %}{{ config.seo.twitter_image }}{% endblock %}
+{% block breadcrumbs %}<nav class="breadcrumbs"><a href="{{ url_for('index') }}">Home</a></nav>{% endblock %}
+{% block page_class %}not-found-page{% endblock %}
+{% block content %}
+<section class="search-section">
+  <form class="search-bar" action="{{ url_for('search') }}" method="GET">
+    <input type="text" name="q" placeholder="Search articles..." value="{{ search_query|default('') }}">
+    <button type="submit" aria-label="Search">Search</button>
+  </form>
+</section>
+<div class="columns-section">
+  <div class="two-thirds-column">
+    {% if related_articles %}
+    <section class="recent-articles">
+      <h2>Suggested Articles</h2>
+      <div class="article-list">
+        {% for article in related_articles %}
+        <div class="article-preview article-preview-home">
+          <img src="{{ article.og_image or config.content.default_image }}" alt="{{ article.title }}" loading="lazy">
+          <h3><a href="{{ url_for('article', slug=article.slug) }}">{{ article.title }}</a></h3>
+          <p>{{ article.meta_description }}</p>
+          <a href="{{ url_for('article', slug=article.slug) }}" class="button">Read More</a>
+        </div>
+        {% endfor %}
+      </div>
+    </section>
+    {% endif %}
+  </div>
+  <div class="one-third-column">
+    <section class="categories">
+      <h2>Categories</h2>
+      <ul>{% for topic in config.content.topics %}<li><a href="{{ url_for('category', category=topic|slugify) }}">{{ topic|capitalize }}</a></li>{% endfor %}</ul>
+    </section>
+  </div>
+</div>
+{% endblock %}

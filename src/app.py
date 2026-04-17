@@ -95,6 +95,11 @@ def find_similar_image_filename(requested_filename, directory="content/assets", 
   return None
 
 
+def _theme(config):
+  """Return the theme name from config, defaulting to 'news'."""
+  return config.get("site", {}).get("theme", "news")
+
+
 def load_domain_config():
   """Load domain config based on request host. Don’t mess this up, or we’re serving 404s all day."""
 
@@ -201,7 +206,8 @@ def create_app():
     # if not dev prefer https
     if not DEV:
       app.config["PREFERRED_URL_SCHEME"] = "https"
-    return dict(config=load_domain_config())
+    cfg = load_domain_config()
+    return dict(config=cfg, theme=_theme(cfg))
 
   @app.route("/")
   def index():
@@ -211,7 +217,7 @@ def create_app():
     latest_article = articles[0] if articles else None
     latest_articles = articles[1:5] if len(articles) > 1 else []
     related_articles = get_related_articles(articles, None)
-    return render_template("index.html", latest_article=latest_article, latest_articles=latest_articles, related_articles=related_articles)
+    return render_template(f"themes/{_theme(load_domain_config())}/index.html", latest_article=latest_article, latest_articles=latest_articles, related_articles=related_articles)
 
   @app.route("/article/<slug>")
   def article(slug):
@@ -222,7 +228,7 @@ def create_app():
     if not article:
       return handle_404(None)
     related_articles = get_related_articles(articles, article)
-    return render_template("article.html", article=article, related_articles=related_articles)
+    return render_template(f"themes/{_theme(load_domain_config())}/article.html", article=article, related_articles=related_articles)
 
   @app.route("/category/<category>")
   def category(category):
@@ -257,7 +263,7 @@ def create_app():
         if score > 0.1:
           results.append(article)
     results.sort(key=lambda x: x["date"] or "1970-01-01", reverse=True)
-    return render_template("index.html", latest_article=None, latest_articles=results, related_articles=articles[:3], search_query=query)
+    return render_template(f"themes/{_theme(load_domain_config())}/index.html", latest_article=None, latest_articles=results, related_articles=articles[:3], search_query=query)
 
   @app.route("/contact", methods=["GET", "POST"])
   def contact():
@@ -270,7 +276,7 @@ def create_app():
         print(f"Contact form submission: {name}, {email}, {message}")
         return redirect(url_for("thank_you"))
       print(f"Invalid contact form submission: {name}, {email}, {message}")
-    return render_template("contact.html")
+    return render_template(f"themes/{_theme(load_domain_config())}/contact.html")
 
   @app.route("/subscribe", methods=["POST"])
   def subscribe():
@@ -285,17 +291,17 @@ def create_app():
   @app.route("/thank_you")
   def thank_you():
     """Thank you page for forms."""
-    return render_template("thank_you.html")
+    return render_template(f"themes/{_theme(load_domain_config())}/thank_you.html")
 
   @app.route("/guest_poster")
   def guest_poster():
     """Guest poster page."""
-    return render_template("guest_poster.html")
+    return render_template(f"themes/{_theme(load_domain_config())}/guest_poster.html")
 
   @app.route("/privacy")
   def privacy():
     """Privacy policy."""
-    return render_template("privacy.html")
+    return render_template(f"themes/{_theme(load_domain_config())}/privacy.html")
 
   @app.route("/sitemap.xml")
   def sitemap():
@@ -358,7 +364,7 @@ def create_app():
           print(f"Serving fallback image: {default_image}")
           return send_from_directory(content_relative_dir_path, default_image)
         return send_from_directory(content_relative_dir_path, "vancouver-bg.jpg")
-    return render_template("404.html", related_articles=[]), 404
+    return render_template(f"themes/{_theme(load_domain_config())}/404.html", related_articles=[]), 404
 
   @app.template_filter("markdown")
   def markdown_filter(text):
@@ -378,7 +384,7 @@ def create_app():
     slug = path.split("/")[-1] if path.startswith("article/") else path
     for article in articles:
       if slug.lower() in article["slug"].lower() or slug.lower() in article["title"].lower():
-        return render_template("article.html", article=article, related_articles=get_related_articles(articles, article)), 200
+        return render_template(f"themes/{_theme(load_domain_config())}/article.html", article=article, related_articles=get_related_articles(articles, article)), 200
     if articles:
       documents = [f"{a['title']} {a['meta_description']} {' '.join(a['meta_keywords'])}" for a in articles]
       tfidf_vectors, vocab = compute_tfidf(documents)
@@ -387,8 +393,8 @@ def create_app():
       similarities.sort(key=lambda x: x[1], reverse=True)
       if similarities and similarities[0][1] > 0.7:
         matched_article = similarities[0][0]
-        return render_template("article.html", article=matched_article, related_articles=get_related_articles(articles, matched_article)), 200
-    return render_template("404.html", related_articles=articles[:10]), 200
+        return render_template(f"themes/{_theme(load_domain_config())}/article.html", article=matched_article, related_articles=get_related_articles(articles, matched_article)), 200
+    return render_template(f"themes/{_theme(load_domain_config())}/404.html", related_articles=articles[:10]), 200
 
   @app.route("/healthz")
   def health_check():

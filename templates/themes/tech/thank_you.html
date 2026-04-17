@@ -1,0 +1,20 @@
+{% extends 'themes/tech/base.html' %}
+{% block title %}Thank You - {{ config.site.name }}{% endblock %}
+{% block meta_description %}Thank you for contacting {{ config.site.name }}.{% endblock %}
+{% block meta_keywords %}{{ config.site.keywords|join(', ') }}{% endblock %}
+{% block og_title %}Thank You - {{ config.site.name }}{% endblock %}
+{% block og_description %}Thank you for reaching out to {{ config.site.name }}.{% endblock %}
+{% block og_image %}{{ config.seo.og_image }}{% endblock %}
+{% block twitter_title %}Thank You - {{ config.site.name }}{% endblock %}
+{% block twitter_description %}Thank you for reaching out to {{ config.site.name }}.{% endblock %}
+{% block twitter_image %}{{ config.seo.twitter_image }}{% endblock %}
+{% block canonical_url %}{{ url_for('thank_you', _external=True, _scheme='https') }}{% endblock %}
+{% block breadcrumbs %}<nav class="breadcrumbs"><a href="{{ url_for('index') }}">Home</a> &rsaquo; <span>Thank You</span></nav>{% endblock %}
+{% block page_class %}thank-you-page{% endblock %}
+{% block content %}
+<div class="content-container">
+  <h1>Thank You!</h1>
+  <p>We've received your message and will get back to you soon.</p>
+  <p><a href="{{ url_for('index') }}" class="button">Return to Home</a></p>
+</div>
+{% endblock %}

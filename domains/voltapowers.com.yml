@@ -1,4 +1,5 @@
 site:
+  theme: tech
   name: Volta Powers
   description: Celebrating global cultural heritage and energy innovation, from world railways to sustainable preservation.
   keywords: [cultural heritage, energy innovation, world culture]
